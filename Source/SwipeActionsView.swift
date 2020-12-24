@@ -285,9 +285,12 @@ class SwipeActionsView: UIView {
 class SwipeActionButtonWrapperView: UIView {
     let contentRect: CGRect
     var actionBackgroundColor: UIColor?
-    
+    var orientation: SwipeActionsOrientation
+
     init(frame: CGRect, action: SwipeAction, orientation: SwipeActionsOrientation, contentWidth: CGFloat) {
-        switch orientation {
+        self.orientation = orientation
+
+        switch self.orientation {
         case .left:
             contentRect = CGRect(x: frame.width - contentWidth, y: 0, width: contentWidth, height: frame.height)
         case .right:
@@ -301,11 +304,18 @@ class SwipeActionButtonWrapperView: UIView {
     
     override func draw(_ rect: CGRect) {
         super.draw(rect)
-        
+
+        // Adding separators between buttons
+        let separatorView = UIView(frame: CGRect(x: 0, y: 0, width: 1, height: rect.height))
+        separatorView.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        self.addSubview(separatorView)
+
         if let actionBackgroundColor = self.actionBackgroundColor, let context = UIGraphicsGetCurrentContext() {
             actionBackgroundColor.setFill()
             context.fill(rect);
         }
+
+        self.addBorder(toSide: self.orientation == .left ? .right : .left)
     }
     
     func configureBackgroundColor(with action: SwipeAction) {
@@ -344,5 +354,38 @@ class SwipeActionButtonWrapperView: UIView {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+}
+
+extension UIView {
+
+    // Example use: myView.addBorder(toSide: .left, withColor: UIColor.red, andThickness: 1.0)
+
+    enum ViewSide {
+        case left, right, top, bottom
+    }
+
+    func addBorder(toSide side: ViewSide,
+                   withColor color: UIColor = UIColor.white.withAlphaComponent(0.15),
+                   andThickness thickness: CGFloat = 1.0) {
+
+        let border = CALayer()
+        border.backgroundColor = color.cgColor
+
+        switch side {
+        case .left:
+            border.frame = CGRect(x: frame.minX, y: frame.minY, width: thickness, height: frame.height)
+
+        case .right:
+            border.frame = CGRect(x: frame.maxX, y: frame.minY, width: thickness, height: frame.height)
+
+        case .top:
+            border.frame = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: thickness)
+
+        case .bottom:
+            border.frame = CGRect(x: frame.minX, y: frame.maxY, width: frame.width, height: thickness)
+        }
+
+        layer.addSublayer(border)
     }
 }
